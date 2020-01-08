@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>IFrame - Testing cross Analytics</title>
+    <script
+      async="false"
+      defer="false"
+      src="https://www.google-analytics.com/analytics.js"
+    ></script>
+  </head>
+  <body>
+    <div id="location"></div>
+    <br />
+    <iframe src="iframe.html" frameborder="0"></iframe>
+    <script>
+      function init() {
+        fetch("config.json")
+          .then(res => res.json())
+          .then(config => {
+            var currentHost = window.location.hostname;
+            var clientId = "client_" + currentHost;
+
+            // Update title with current location
+            document.querySelector("#location").innerText = currentHost;
+
+            ga("create", config.uaid, "auto", {
+              allowLinker: true,
+              clientId: clientId
+            });
+            ga("require", "linker");
+            ga(
+              "linker:autoLink",
+              config.hosts.filter(i => i !== currentHost)
+            );
+            ga("send", "pageview");
+
+            localStorage.setItem("data", JSON.stringify({
+              host: currentHost,
+              clientId: clientId
+            }));
+          })
+          .catch(console.error);
+      }
+      var readyStateInterval = setInterval(function() {
+        if (ga) {
+          clearInterval(readyStateInterval);
+          init();
+        }
+      }, 100);
+    </script>
+  </body>
+</html>
